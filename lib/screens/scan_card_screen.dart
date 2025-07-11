@@ -1,7 +1,7 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
-import 'package:camera/camera.dart';
-import 'dart:async';
+import '../utils/ocr_parser.dart';
 
 class ScanCardScreen extends StatefulWidget {
   const ScanCardScreen({super.key});
@@ -12,9 +12,8 @@ class ScanCardScreen extends StatefulWidget {
 
 class _ScanCardScreenState extends State<ScanCardScreen> {
   late CameraController _cameraController;
-  late List<CameraDescription> _cameras;
-  bool _isScanning = false;
-  final textRecognizer = GoogleMlKit.vision.textRecognizer();
+  bool _isInitialized = false;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -23,60 +22,69 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
   }
 
   Future<void> _initializeCamera() async {
-    _cameras = await availableCameras();
-    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
+    final cameras = await availableCameras();
+    final camera = cameras.first;
+
+    _cameraController = CameraController(camera, ResolutionPreset.high);
     await _cameraController.initialize();
-    if (mounted) setState(() {});
+
+    if (!mounted) return;
+    setState(() => _isInitialized = true);
   }
 
-  Future<void> _scanCard() async {
-    if (_isScanning) return;
+  Future<void> _captureAndProcess() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
 
-    setState(() => _isScanning = true);
+    try {
+      final XFile file = await _cameraController.takePicture();
+      final inputImage = InputImage.fromFilePath(file.path);
+      final textRecognizer = GoogleMlKit.vision.textRecognizer();
 
-    final picture = await _cameraController.takePicture();
-    final inputImage = InputImage.fromFilePath(picture.path);
-    final RecognizedText recognizedText =
-        await textRecognizer.processImage(inputImage);
+      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+      await textRecognizer.close();
 
-    String allText = recognizedText.text;
-    print("📄 Text reconnu :\n$allText");
+      final rawText = recognizedText.text;
+      final contact = parseTextToContact(rawText);
 
-    // À faire : parser ce texte pour remplir un Contact
-
-    setState(() => _isScanning = false);
-
-    // Pour l’instant, retourne juste au formulaire avec le texte brut
-    Navigator.pop(context, allText);
+      if (context.mounted) {
+        Navigator.pop(context, contact);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : ${e.toString()}')),
+        );
+      }
+    } finally {
+      setState(() => _isProcessing = false);
+    }
   }
 
   @override
   void dispose() {
     _cameraController.dispose();
-    textRecognizer.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_cameraController.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Business Card')),
-      body: Stack(
-        children: [
-          CameraPreview(_cameraController),
-          if (_isScanning)
-            const Center(
-              child: CircularProgressIndicator(),
-            )
-        ],
-      ),
+      appBar: AppBar(title: const Text('Scan Card via OCR')),
+      body: !_isInitialized
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                CameraPreview(_cameraController),
+                if (_isProcessing)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _scanCard,
-        child: const Icon(Icons.camera),
+        onPressed: _captureAndProcess,
+        child: const Icon(Icons.camera_alt),
       ),
     );
   }

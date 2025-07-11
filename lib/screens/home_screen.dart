@@ -5,7 +5,7 @@ import 'package:ocr_qr_scanner/screens/contact_qr_screen.dart';
 import 'package:ocr_qr_scanner/screens/scan_card_screen.dart';
 import 'package:ocr_qr_scanner/screens/scan_qr_import_screen.dart.dart';
 import 'package:ocr_qr_scanner/utils/ocr_parser.dart';
-import '../models/contact.dart';
+import 'package:ocr_qr_scanner/models/contact.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

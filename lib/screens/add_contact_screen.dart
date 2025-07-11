@@ -36,6 +36,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   @override
   State<AddContactScreen> createState() => _AddContactScreenState();
+  @override
   void initState() {
     super.initState();
     if (widget.prefilled != null) {
@@ -45,6 +46,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
       _companyController.text = widget.prefilled!.company;
     }
   }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Contact')),

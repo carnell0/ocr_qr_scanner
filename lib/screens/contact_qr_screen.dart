@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../models/contact.dart';
-import 'dart:convert';
 
 class ContactQRScreen extends StatelessWidget {
   final Contact contact;
@@ -10,18 +9,11 @@ class ContactQRScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contactJson = jsonEncode({
-      'name': contact.name,
-      'phone': contact.phone,
-      'email': contact.email,
-      'company': contact.company,
-    });
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Contact QR Code')),
+      appBar: AppBar(title: const Text('QR Code du contact')),
       body: Center(
         child: QrImageView(
-          data: contactJson,
+          data: contact.toJsonString(),
           version: QrVersions.auto,
           size: 250.0,
         ),

@@ -11,14 +11,20 @@ class ScanQrImportScreen extends StatefulWidget {
 }
 
 class _ScanQrImportScreenState extends State<ScanQrImportScreen> {
-  bool _scanned = false;
+  bool _isProcessing = false;
 
-  void _handleScan(String rawData) {
-    if (_scanned) return; // éviter les doubles scans
-    _scanned = true;
+  void _onDetect(BarcodeCapture capture) {
+    if (_isProcessing) return;
+
+    final barcode = capture.barcodes.first;
+    final String? rawValue = barcode.rawValue;
+
+    if (rawValue == null) return;
+
+    setState(() => _isProcessing = true);
 
     try {
-      final Map<String, dynamic> data = jsonDecode(rawData);
+      final data = jsonDecode(rawValue);
 
       final contact = Contact(
         name: data['name'] ?? '',
@@ -27,30 +33,41 @@ class _ScanQrImportScreenState extends State<ScanQrImportScreen> {
         company: data['company'] ?? '',
       );
 
-      Navigator.pop(context, contact);
+      if (context.mounted) {
+        Navigator.pop(context, contact);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid QR code')),
-      );
-      Navigator.pop(context);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR code invalide ou mal formaté')),
+        );
+        Navigator.pop(context);
+      }
+    } finally {
+      setState(() => _isProcessing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Import Contact from QR')),
-      body: MobileScanner(
-        controller: MobileScannerController(
-          detectionSpeed: DetectionSpeed.normal,
-          facing: CameraFacing.back,
-        ),
-        onDetect: (capture) {
-          final barcode = capture.barcodes.first;
-          if (barcode.rawValue != null) {
-            _handleScan(barcode.rawValue!);
-          }
-        },
+      appBar: AppBar(
+        title: const Text('Importer contact via QR'),
+      ),
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: MobileScannerController(
+              detectionSpeed: DetectionSpeed.normal,
+              facing: CameraFacing.back,
+            ),
+            onDetect: _onDetect,
+          ),
+          if (_isProcessing)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+        ],
       ),
     );
   }

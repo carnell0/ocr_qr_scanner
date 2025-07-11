@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:hive/hive.dart';
 
 part 'contact.g.dart';
@@ -22,4 +23,14 @@ class Contact extends HiveObject {
     required this.email,
     required this.company,
   });
+
+  String toJsonString() {
+    final map = {
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'company': company,
+    };
+    return jsonEncode(map);
+  }
 }
