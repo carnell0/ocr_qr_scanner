@@ -4,7 +4,8 @@ import '../models/contact.dart';
 
 class AddContactScreen extends StatefulWidget {
   final Contact? prefilled;
-  const AddContactScreen({super.key, this.prefilled});
+  final int? contactKey; // Ajout de la clé pour l'édition
+  const AddContactScreen({super.key, this.prefilled, this.contactKey});
 
 
   @override
@@ -28,14 +29,43 @@ class _AddContactScreenState extends State<AddContactScreen> {
       );
 
       final box = Hive.box<Contact>('contacts');
-      await box.add(contact);
-
-      Navigator.pop(context);
+      // Vérification des doublons (email ou numéro), ignorer le contact en cours d'édition
+      final duplicate = box.values.toList().asMap().entries.any((entry) {
+        final idx = entry.key;
+        final c = entry.value;
+        if (widget.contactKey != null && box.keyAt(idx) == widget.contactKey) return false;
+        return (c.email.isNotEmpty && c.email == contact.email) ||
+               (c.phone.isNotEmpty && c.phone == contact.phone);
+      });
+      if (duplicate) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Doublon détecté'),
+            content: const Text('Un contact avec le même email ou numéro existe déjà. Voulez-vous l’ajouter quand même ?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Ajouter'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+      }
+      if (widget.contactKey != null) {
+        await box.put(widget.contactKey, contact);
+      } else {
+        await box.add(contact);
+      }
+      Navigator.pop(context, contact);
     }
   }
 
-  @override
-  State<AddContactScreen> createState() => _AddContactScreenState();
   @override
   void initState() {
     super.initState();

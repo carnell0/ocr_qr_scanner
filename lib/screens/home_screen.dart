@@ -6,6 +6,7 @@ import 'package:ocr_qr_scanner/screens/scan_card_screen.dart';
 import 'package:ocr_qr_scanner/screens/scan_qr_import_screen.dart.dart';
 import 'package:ocr_qr_scanner/utils/ocr_parser.dart';
 import 'package:ocr_qr_scanner/models/contact.dart';
+import 'package:ocr_qr_scanner/screens/contact_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -38,10 +39,20 @@ class HomeScreen extends StatelessWidget {
                 title: Text(contact?.name ?? ''),
                 subtitle: Text(contact?.email ?? ''),
                 onTap: () {
-                  // à faire plus tard : aller sur la fiche contact
+                  if (contact != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ContactDetailScreen(
+                          contact: contact,
+                          contactKey: box.keyAt(index) as int,
+                        ),
+                      ),
+                    );
+                  }
                 },
                 trailing: IconButton(
-                icon: const Icon(Icons.qr_code),
+                  icon: const Icon(Icons.qr_code),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -51,69 +62,11 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                 ),
-
               );
             },
           );
         },
       ),
-      floatingActionButton: Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        FloatingActionButton(
-          heroTag: 'add',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddContactScreen()),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-        const SizedBox(height: 10),
-        FloatingActionButton(
-          heroTag: 'scan',
-          onPressed: () async {
-            final scannedText = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ScanCardScreen()),
-            );
-
-            if (scannedText != null && context.mounted) {
-              final parsedContact = parseTextToContact(scannedText);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AddContactScreen(prefilled: parsedContact),
-                ),
-              );
-            }
-          },
-          child: const Icon(Icons.qr_code_scanner),
-        ),
-        FloatingActionButton(
-        heroTag: 'import',
-        onPressed: () async {
-          final contact = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ScanQrImportScreen()),
-          );
-
-          if (contact != null && context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AddContactScreen(prefilled: contact),
-              ),
-            );
-          }
-        },
-        child: const Icon(Icons.download),
-      ),
-
-      ],
-    ),
-
     );
   }
 }
