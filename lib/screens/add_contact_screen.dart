@@ -78,36 +78,117 @@ class _AddContactScreenState extends State<AddContactScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.contactKey != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Contact')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Modifier le contact' : 'Ajouter un contact'),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Avatar section
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.person_add,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Name field
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
+                decoration: InputDecoration(
+                  labelText: 'Nom *',
+                  hintText: 'Entrez le nom complet',
+                  prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                validator: (value) => value!.isEmpty ? 'Le nom est requis' : null,
               ),
+              const SizedBox(height: 16),
+              
+              // Phone field
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
+                decoration: InputDecoration(
+                  labelText: 'Téléphone',
+                  hintText: 'Entrez le numéro de téléphone',
+                  prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                keyboardType: TextInputType.phone,
               ),
+              const SizedBox(height: 16),
+              
+              // Email field
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'Entrez l\'adresse email',
+                  prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
+              const SizedBox(height: 16),
+              
+              // Company field
               TextFormField(
                 controller: _companyController,
-                decoration: const InputDecoration(labelText: 'Company'),
+                decoration: InputDecoration(
+                  labelText: 'Entreprise',
+                  hintText: 'Entrez le nom de l\'entreprise',
+                  prefixIcon: Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 32),
+              
+              // Save button
+              ElevatedButton.icon(
                 onPressed: _saveContact,
-                child: const Text('Save'),
-              )
+                icon: Icon(Icons.save),
+                label: Text(isEditing ? 'Modifier' : 'Enregistrer'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
