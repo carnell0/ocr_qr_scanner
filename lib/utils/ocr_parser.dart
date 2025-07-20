@@ -10,7 +10,7 @@ Contact parseTextToContact(String rawText) {
 
   // Regex plus robustes
   final emailRegex = RegExp(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}');
-  final phoneRegex = RegExp(r'(\+\d{1,3}[\s.-]?)?(\(?\d{2,4}\)?[\s.-]?)?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}');
+  final phoneRegex = RegExp(r'(\+\d{1,3}[ 0-\s.-]?)?(\(?\d{2,4}\)?[\s.-]?)?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}');
   final companyKeywords = ['company', 'sarl', 'sas', 'inc', 'ltd', 'corp', 'entreprise', 'agence', 'group', 'studio'];
 
   // Recherche email et téléphone sur toutes les lignes
@@ -19,14 +19,17 @@ Contact parseTextToContact(String rawText) {
       email = emailRegex.firstMatch(line)!.group(0)!;
     }
     if (phone.isEmpty && phoneRegex.hasMatch(line)) {
-      // Nettoie le numéro pour ne garder que les chiffres et +
-      final raw = phoneRegex.firstMatch(line)!.group(0)!;
-      phone = raw.replaceAll(RegExp(r'[^\d+]'), '');
+      var raw = phoneRegex.firstMatch(line)!.group(0)!;
+      // Remplace +33 par 0 si présent
+      raw = raw.replaceFirst(RegExp(r'^\+33'), '0');
+      // Garde uniquement les chiffres
+      final digits = raw.replaceAll(RegExp(r'\D'), '');
+      // Prend les 10 derniers chiffres si possible
+      phone = digits.length >= 10 ? digits.substring(digits.length - 10) : digits;
     }
   }
 
   // Recherche du nom :
-  // 1. Ligne sans chiffre, ni @, ni mot-clé d'entreprise, ni trop courte
   for (final line in lines) {
     if (name.isEmpty &&
         line.length > 2 &&

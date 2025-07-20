@@ -7,7 +7,9 @@ void main() {
   group('Contact duplicate detection', () {
     setUp(() async {
       await setUpTestHive();
-      Hive.registerAdapter(ContactAdapter());
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(ContactAdapter());
+      }
       await Hive.openBox<Contact>('contacts');
     });
     tearDown(() async {
